@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { useHotelStore, useAuthStore } from '../store/hotelStore';
-import { hotelService, bookingService } from '../services/api';
+import { hotelService, bookingService, authService } from '../services/api';
 import { toast } from 'sonner';
 
 function HotelDetailsPage() {
