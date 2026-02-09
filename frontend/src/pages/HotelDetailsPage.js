@@ -12,14 +12,30 @@ function HotelDetailsPage() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const { selectedHotel, setSelectedHotel, searchParams } = useHotelStore();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, setUser } = useAuthStore();
   const [hotel, setHotel] = useState(selectedHotel);
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [bookingData, setBookingData] = useState({
     guestFirstName: '',
     guestLastName: '',
     guestEmail: ''
   });
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = await authService.getMe();
+        setUser(userData);
+      } catch (error) {
+        // Not authenticated
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [setUser]);
 
   useEffect(() => {
     const fetchHotel = async () => {
