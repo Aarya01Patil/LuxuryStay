@@ -322,6 +322,18 @@ async def logout(request: Request, user: Dict = Depends(get_current_user)):
         await db.user_sessions.delete_one({"session_token": session_token})
     return {"message": "Logged out successfully"}
 
+@api_router.get("/status")
+async def api_status():
+    """Check API configuration status"""
+    return {
+        "booking_api_configured": USE_REAL_API,
+        "booking_api_mode": "real" if USE_REAL_API else "mock",
+        "booking_api_url": BOOKING_API_BASE_URL if USE_REAL_API else "N/A",
+        "supported_cities": len(CITY_ID_MAPPING),
+        "stripe_configured": bool(os.environ.get('STRIPE_API_KEY')),
+        "message": "Booking.com API credentials configured" if USE_REAL_API else "Using mock hotel data. Add BOOKING_API_KEY and BOOKING_AFFILIATE_ID to .env to enable real API"
+    }
+
 @api_router.post("/hotels/search", response_model=List[HotelInfo])
 async def search_hotels(search_request: HotelSearchRequest):
     """Search for hotels using Booking.com API or mock data"""
