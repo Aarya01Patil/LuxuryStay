@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -8,7 +8,20 @@ import HeroSection from '../components/HeroSection';
 
 function HomePage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, clearUser } = useAuthStore();
+  const { user, isAuthenticated, setUser, clearUser } = useAuthStore();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = await authService.getMe();
+        setUser(userData);
+      } catch (error) {
+        // Not authenticated, which is fine for home page
+      }
+    };
+
+    checkAuth();
+  }, [setUser]);
 
   const handleLogout = async () => {
     try {
