@@ -4,12 +4,11 @@ import { CreditCard } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { paymentService } from '../services/api';
-import { useToast } from '../components/ui/use-toast';
+import { toast } from 'sonner';
 
 function PaymentPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const booking = location.state?.booking;
 
@@ -27,11 +26,7 @@ function PaymentPage() {
       
       window.location.href = session.url;
     } catch (error) {
-      toast({
-        title: "Payment Error",
-        description: error.response?.data?.detail || "Unable to process payment",
-        variant: "destructive"
-      });
+      toast.error(error.response?.data?.detail || "Unable to process payment");
       setLoading(false);
     }
   };

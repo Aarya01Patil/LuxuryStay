@@ -4,12 +4,11 @@ import { CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { paymentService } from '../services/api';
-import { useToast } from '../components/ui/use-toast';
+import { toast } from 'sonner';
 
 function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [polling, setPolling] = useState(true);
   const sessionId = searchParams.get('session_id');
@@ -27,11 +26,7 @@ function PaymentSuccessPage() {
     const pollPaymentStatus = async () => {
       if (attempts >= maxAttempts) {
         setPolling(false);
-        toast({
-          title: "Status Check Timeout",
-          description: "Please check your bookings for confirmation",
-          variant: "destructive"
-        });
+        toast.error("Status check timeout. Please check your bookings.");
         return;
       }
 
@@ -41,19 +36,12 @@ function PaymentSuccessPage() {
         if (status.payment_status === 'paid') {
           setPaymentStatus(status);
           setPolling(false);
-          toast({
-            title: "Payment Successful!",
-            description: "Your booking has been confirmed"
-          });
+          toast.success("Payment successful! Your booking has been confirmed.");
           return;
         } else if (status.status === 'expired') {
           setPaymentStatus(status);
           setPolling(false);
-          toast({
-            title: "Payment Expired",
-            description: "Please try booking again",
-            variant: "destructive"
-          });
+          toast.error("Payment expired. Please try booking again.");
           return;
         }
 
@@ -71,7 +59,7 @@ function PaymentSuccessPage() {
     };
 
     pollPaymentStatus();
-  }, [sessionId, navigate, toast]);
+  }, [sessionId, navigate]);
 
   if (polling) {
     return (

@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, MapPin, DollarSign } from 'lucide-react';
+import { LogOut, Calendar, DollarSign } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { useAuthStore } from '../store/hotelStore';
 import { authService, bookingService } from '../services/api';
-import { useToast } from '../components/ui/use-toast';
+import { toast } from 'sonner';
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user, clearUser } = useAuthStore();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,18 +20,14 @@ function DashboardPage() {
         const data = await bookingService.getUserBookings();
         setBookings(data);
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load bookings",
-          variant: "destructive"
-        });
+        toast.error("Failed to load bookings");
       } finally {
         setLoading(false);
       }
     };
 
     fetchBookings();
-  }, [toast]);
+  }, []);
 
   const handleLogout = async () => {
     try {

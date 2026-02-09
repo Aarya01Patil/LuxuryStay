@@ -15,11 +15,7 @@ function HeroSection() {
     e.preventDefault();
 
     if (!searchParams.destination || !searchParams.checkIn || !searchParams.checkOut) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -38,11 +34,7 @@ function HeroSection() {
       navigate('/search-results');
     } catch (error) {
       setError(error.message);
-      toast({
-        title: "Search Failed",
-        description: "Unable to search hotels. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Unable to search hotels. Please try again.");
     } finally {
       setLoading(false);
     }

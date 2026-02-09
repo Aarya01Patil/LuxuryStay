@@ -4,15 +4,13 @@ import { ArrowLeft, Star, MapPin, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
 import { useHotelStore, useAuthStore } from '../store/hotelStore';
 import { hotelService, bookingService } from '../services/api';
-import { useToast } from '../components/ui/use-toast';
+import { toast } from 'sonner';
 
 function HotelDetailsPage() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { selectedHotel, setSelectedHotel, searchParams } = useHotelStore();
   const { isAuthenticated } = useAuthStore();
   const [hotel, setHotel] = useState(selectedHotel);
@@ -31,16 +29,12 @@ function HotelDetailsPage() {
           setHotel(hotelData);
           setSelectedHotel(hotelData);
         } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to load hotel details",
-            variant: "destructive"
-          });
+          toast.error("Failed to load hotel details");
         }
       }
     };
     fetchHotel();
-  }, [hotelId, selectedHotel, setSelectedHotel, toast]);
+  }, [hotelId, selectedHotel, setSelectedHotel]);
 
   const calculateNights = () => {
     if (!searchParams.checkIn || !searchParams.checkOut) return 0;
@@ -64,20 +58,12 @@ function HotelDetailsPage() {
     }
 
     if (!bookingData.guestFirstName || !bookingData.guestLastName || !bookingData.guestEmail) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all guest details",
-        variant: "destructive"
-      });
+      toast.error("Please fill in all guest details");
       return;
     }
 
     if (!searchParams.checkIn || !searchParams.checkOut) {
-      toast({
-        title: "Missing Dates",
-        description: "Please select check-in and check-out dates",
-        variant: "destructive"
-      });
+      toast.error("Please select check-in and check-out dates");
       return;
     }
 
@@ -95,18 +81,10 @@ function HotelDetailsPage() {
         total_price: calculateTotal()
       });
 
-      toast({
-        title: "Booking Created",
-        description: "Proceeding to payment..."
-      });
-
+      toast.success("Booking created! Proceeding to payment...");
       navigate('/payment', { state: { booking } });
     } catch (error) {
-      toast({
-        title: "Booking Failed",
-        description: error.response?.data?.detail || "Unable to create booking",
-        variant: "destructive"
-      });
+      toast.error(error.response?.data?.detail || "Unable to create booking");
     } finally {
       setLoading(false);
     }
