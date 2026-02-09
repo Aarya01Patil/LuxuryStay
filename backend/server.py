@@ -135,9 +135,10 @@ MOCK_HOTELS = [
     }
 ]
 
-with open(Path(__file__).parent / 'extended_hotels.txt', 'r') as f:
-    import json
-    EXTENDED_HOTELS = json.loads(f.read())
+from pathlib import Path
+extended_hotels_file = Path(__file__).parent / 'extended_hotels.py'
+if extended_hotels_file.exists():
+    from extended_hotels import EXTENDED_HOTELS
     MOCK_HOTELS.extend(EXTENDED_HOTELS)
 
 class HotelSearchRequest(BaseModel):
