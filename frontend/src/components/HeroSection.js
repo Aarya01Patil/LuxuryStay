@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 function HeroSection() {
   const navigate = useNavigate();
   const { searchParams, setSearchParams, setHotels, setLoading, setError } = useHotelStore();
-  const { toast } = useToast();
 
   const handleSearch = async (e) => {
     e.preventDefault();
