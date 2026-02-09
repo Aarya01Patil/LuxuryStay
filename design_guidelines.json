@@ -1,0 +1,115 @@
+{
+  "project_name": "Vibrant Escape - Hotel Booking Platform",
+  "design_philosophy": {
+    "theme": "Vibrant Escape",
+    "core_values": ["Trust", "Excitement", "Ease"],
+    "visual_style": "Modern Travel Magazine meets High-Utility SaaS",
+    "light_mode_preference": true
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Fraunces, serif",
+      "body": "Plus Jakarta Sans, sans-serif"
+    },
+    "installation": {
+      "google_fonts_import": "@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');"
+    },
+    "usage_rules": {
+      "headings": "Use Fraunces for all H1-H3. Font weight should vary: Light (300) for elegance, Black (900) for impact. Letter spacing: tight.",
+      "body": "Use Plus Jakarta Sans for all UI text, labels, and paragraphs. Keep line-height loose (1.6) for readability.",
+      "uppercase": "Use uppercase + wide tracking (0.1em) for overlines and small labels."
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "hsl(199, 89%, 48%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Azure Blue - Trust, Ocean, Sky"
+      },
+      "secondary": {
+        "DEFAULT": "hsl(26, 90%, 55%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Sunset Orange - Action, Warmth, Urgency"
+      },
+      "accent": {
+        "DEFAULT": "hsl(173, 58%, 39%)",
+        "foreground": "hsl(0, 0%, 100%)",
+        "description": "Teal - Nature, Calm"
+      },
+      "background": "hsl(210, 40%, 98%)",
+      "foreground": "hsl(222, 47%, 11%)",
+      "card": "hsl(0, 0%, 100%)",
+      "card_foreground": "hsl(222, 47%, 11%)",
+      "muted": "hsl(210, 40%, 96.1%)",
+      "muted_foreground": "hsl(215, 16%, 47%)",
+      "border": "hsl(214, 32%, 91%)"
+    },
+    "rules": {
+      "gradients": "Avoid full-screen gradients. Use subtle mesh gradients in hero sections only.",
+      "contrast": "Ensure text contrast ratio is at least 4.5:1. Use Deep Navy for text, never pure black."
+    }
+  },
+  "layout_strategies": {
+    "spacing": {
+      "scale": "Use 2x standard spacing. If you think p-4 is enough, use p-8.",
+      "container_padding": "px-6 md:px-12 lg:px-24"
+    },
+    "grids": {
+      "marketing": "Use 'Tetris Grid' for destination showcases (mix of col-span-2, col-span-1, row-span-2).",
+      "listings": "Use 'Wide Cards' for hotels: Image carousel on left (40%), Details on right (60%). Stack on mobile.",
+      "details": "Use 'Bento Grid' for amenities and photo galleries."
+    },
+    "surfaces": {
+      "glassmorphism": "Use for sticky headers and floating search bars. Class: 'bg-white/70 backdrop-blur-xl border border-white/20 shadow-sm'.",
+      "cards": "Flat white background, 1px border (slate-100), soft shadow-sm. On hover: -translate-y-1, shadow-lg, border-blue-200."
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Pill-shaped (rounded-full). High saturation. Subtle shadow.",
+      "classes": "rounded-full px-8 py-6 font-semibold shadow-md hover:shadow-lg transition-all active:scale-95"
+    },
+    "inputs": {
+      "style": "Large touch targets, friendly borders.",
+      "classes": "h-12 rounded-xl border-2 border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+    },
+    "search_bar": {
+      "style": "Floating, pill-shaped or rounded-2xl, glass effect.",
+      "location": "Hero section, centered or overlapping the hero image."
+    }
+  },
+  "assets": {
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px or 2px. Rounded linecaps."
+    },
+    "images": {
+      "hero_backgrounds": [
+        "https://images.unsplash.com/photo-1724598571320-7d2b5584cff6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHx0cm9waWNhbCUyMGJlYWNoJTIwcmVzb3J0JTIwYWVyaWFsJTIwdmlldyUyMHZpYnJhbnR8ZW58MHx8fHwxNzcwNjY0NzYxfDA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1763110805060-80dbead1f9d3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHx0cm9waWNhbCUyMGJlYWNoJTIwcmVzb3J0JTIwYWVyaWFsJTIwdmlldyUyMHZpYnJhbnR8ZW58MHx8fHwxNzcwNjY0NzYxfDA&ixlib=rb-4.1.0&q=85"
+      ],
+      "hotel_interiors": [
+        "https://images.unsplash.com/photo-1629140727571-9b5c6f6267b4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMGJlZHJvb20lMjBpbnRlcmlvcnxlbnwwfHx8fDE3NzA2NjQ3Nzl8MA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1766928210443-0be92ed5884a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBob3RlbCUyMGJlZHJvb20lMjBpbnRlcmlvcnxlbnwwfHx8fDE3NzA2NjQ3Nzl8MA&ixlib=rb-4.1.0&q=85"
+      ],
+      "hotel_exteriors": [
+        "https://images.unsplash.com/photo-1770017408222-dc83f61d9725?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBob3RlbCUyMGJ1aWxkaW5nJTIwZXh0ZXJpb3J8ZW58MHx8fHwxNzcwNjY0NzgzfDA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1769766407883-1645a93eed40?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBob3RlbCUyMGJ1aWxkaW5nJTIwZXh0ZXJpb3J8ZW58MHx8fHwxNzcwNjY0NzgzfDA&ixlib=rb-4.1.0&q=85"
+      ],
+      "travelers": [
+        "https://images.unsplash.com/photo-1758613171601-64ebfbc928ed?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGNvdXBsZSUyMHRyYXZlbCUyMHNlbGZpZXxlbnwwfHx8fDE3NzA2NjQ3ODF8MA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1758613171548-b26cb5d2abf3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzd8MHwxfHNlYXJjaHwyfHxoYXBweSUyMGNvdXBsZSUyMHRyYXZlbCUyMHNlbGZpZXxlbnwwfHx8fDE3NzA2NjQ3ODF8MA&ixlib=rb-4.1.0&q=85"
+      ]
+    }
+  },
+  "universal_guidelines": [
+    "Do not use generic centered layouts. Use asymmetry.",
+    "Use glassmorphism with backdrop-blur-xl for overlays.",
+    "Add micro-interactions to every button and card (hover, active states).",
+    "Use 'sonner' for toasts.",
+    "All interactive elements MUST have a data-testid attribute.",
+    "Do not use 'Inter' font for headings. Use 'Fraunces'.",
+    "Ensure mobile responsiveness is prioritized (stack grids, adjust padding)."
+  ]
+}
