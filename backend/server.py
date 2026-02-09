@@ -220,6 +220,38 @@ async def get_current_user(authorization: Optional[str] = Header(None), request:
     
     return user_doc
 
+async def call_booking_api(endpoint: str, method: str = "GET", payload: Dict = None) -> Any:
+    """Make authenticated API calls to Booking.com"""
+    if not USE_REAL_API:
+        raise HTTPException(status_code=503, detail="Booking.com API not configured")
+    
+    headers = {
+        "Authorization": f"Bearer {BOOKING_API_KEY}",
+        "X-Affiliate-Id": BOOKING_AFFILIATE_ID,
+        "Content-Type": "application/json"
+    }
+    
+    url = f"{BOOKING_API_BASE_URL}/{endpoint}"
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            if method == "POST":
+                response = await client.post(url, json=payload, headers=headers)
+            else:
+                response = await client.get(url, headers=headers)
+            
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Booking.com API error {e.response.status_code}: {e.response.text}")
+            raise HTTPException(
+                status_code=e.response.status_code,
+                detail=f"Booking.com API error: {e.response.text}"
+            )
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error calling Booking.com: {str(e)}")
+            raise HTTPException(status_code=503, detail="Unable to reach Booking.com API")
+
 @api_router.post("/auth/session")
 async def process_session(session_req: SessionRequest, response: JSONResponse = None):
     try:
