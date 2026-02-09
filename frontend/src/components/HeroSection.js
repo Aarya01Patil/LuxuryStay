@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useHotelStore } from '../store/hotelStore';
 import { hotelService } from '../services/api';
-import { useToast } from './ui/use-toast';
+import { toast } from 'sonner';
 
 function HeroSection() {
   const navigate = useNavigate();
