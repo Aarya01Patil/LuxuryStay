@@ -23,6 +23,36 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
+BOOKING_API_KEY = os.environ.get('BOOKING_API_KEY', 'YOUR_API_KEY_HERE')
+BOOKING_AFFILIATE_ID = os.environ.get('BOOKING_AFFILIATE_ID', 'YOUR_AFFILIATE_ID_HERE')
+BOOKING_API_BASE_URL = os.environ.get('BOOKING_API_BASE_URL', 'https://demandapi-sandbox.booking.com/3.1')
+USE_REAL_API = BOOKING_API_KEY != 'YOUR_API_KEY_HERE' and BOOKING_API_KEY != ''
+
+CITY_ID_MAPPING = {
+    "miami": -1548846,
+    "miami beach": -1548846,
+    "new york": -2601889,
+    "los angeles": -1752729,
+    "san diego": -1768774,
+    "denver": -1712385,
+    "amsterdam": -2140479,
+    "london": -2601889,
+    "paris": -1456928,
+    "rome": -126693,
+    "barcelona": -372490,
+    "berlin": -1746443,
+    "tokyo": -246227,
+    "singapore": -73635,
+    "bangkok": -3414440,
+    "dubai": -782831,
+    "las vegas": -1771291,
+    "orlando": -1771217,
+    "san francisco": -1746462,
+    "chicago": -1743924,
+    "boston": -2073502,
+    "seattle": -1771260
+}
+
 MOCK_HOTELS = [
     {
         "id": 1001,
