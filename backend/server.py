@@ -324,6 +324,91 @@ async def logout(request: Request, user: Dict = Depends(get_current_user)):
 
 @api_router.post("/hotels/search", response_model=List[HotelInfo])
 async def search_hotels(search_request: HotelSearchRequest):
+    """Search for hotels using Booking.com API or mock data"""
+    
+    if USE_REAL_API:
+        city_id = CITY_ID_MAPPING.get(search_request.destination.lower())
+        
+        if not city_id:
+            available_cities = ", ".join(list(CITY_ID_MAPPING.keys())[:10])
+            raise HTTPException(
+                status_code=400,
+                detail=f"City '{search_request.destination}' not supported. Try: {available_cities}"
+            )
+        
+        cached = await db.hotel_cache.find_one({
+            "destination": search_request.destination.lower(),
+            "check_in": search_request.check_in,
+            "check_out": search_request.check_out,
+            "expires_at": {"$gt": datetime.now(timezone.utc)}
+        }, {"_id": 0})
+        
+        if cached:
+            logger.info(f"Returning cached results for {search_request.destination}")
+            return [HotelInfo(**h) for h in cached["results"]]
+        
+        payload = {
+            "booker": {
+                "country": "us",
+                "platform": "desktop"
+            },
+            "checkin": search_request.check_in,
+            "checkout": search_request.check_out,
+            "city": city_id,
+            "guests": {
+                "number_of_adults": search_request.num_adults,
+                "number_of_children": search_request.num_children,
+                "number_of_rooms": search_request.num_rooms
+            },
+            "extras": ["products", "extra_charges", "images"]
+        }
+        
+        try:
+            response_data = await call_booking_api("accommodations/search", "POST", payload)
+            
+            hotels = []
+            for accommodation in response_data.get("data", [])[:15]:
+                try:
+                    price_data = accommodation.get("price", {})
+                    price = float(price_data.get("total", 0)) if price_data else 0
+                    
+                    hotel = HotelInfo(
+                        id=accommodation.get("id", 0),
+                        name=accommodation.get("name", "Unknown Hotel"),
+                        city=search_request.destination,
+                        country=accommodation.get("country", ""),
+                        description=(accommodation.get("description", "Beautiful hotel")[:200] + "..."),
+                        price=price,
+                        currency=accommodation.get("currency", {}).get("accommodation", "USD"),
+                        rating=float(accommodation.get("review_score", 0)),
+                        review_count=accommodation.get("review_count", 0),
+                        image_urls=accommodation.get("image_urls", [])[:4],
+                        amenities=accommodation.get("facilities", [])[:6]
+                    )
+                    hotels.append(hotel)
+                except Exception as e:
+                    logger.error(f"Error parsing hotel data: {str(e)}")
+                    continue
+            
+            if hotels:
+                cache_doc = {
+                    "destination": search_request.destination.lower(),
+                    "check_in": search_request.check_in,
+                    "check_out": search_request.check_out,
+                    "results": [h.dict() for h in hotels],
+                    "cached_at": datetime.now(timezone.utc),
+                    "expires_at": datetime.now(timezone.utc) + timedelta(hours=1)
+                }
+                await db.hotel_cache.insert_one(cache_doc)
+            
+            return hotels
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error calling Booking.com API: {str(e)}")
+            logger.info("Falling back to mock data")
+    
     filtered_hotels = [h for h in MOCK_HOTELS if search_request.destination.lower() in h["city"].lower() or search_request.destination.lower() in h["country"].lower()]
     
     if not filtered_hotels:
