@@ -418,6 +418,56 @@ async def search_hotels(search_request: HotelSearchRequest):
 
 @api_router.get("/hotels/{hotel_id}", response_model=HotelInfo)
 async def get_hotel_details(hotel_id: int):
+    """Get detailed hotel information from Booking.com or mock data"""
+    
+    if USE_REAL_API:
+        cached = await db.hotel_details_cache.find_one({
+            "hotel_id": hotel_id,
+            "expires_at": {"$gt": datetime.now(timezone.utc)}
+        }, {"_id": 0})
+        
+        if cached:
+            logger.info(f"Returning cached details for hotel {hotel_id}")
+            return HotelInfo(**cached["hotel_data"])
+        
+        try:
+            response_data = await call_booking_api(f"accommodations/{hotel_id}")
+            
+            accommodation = response_data.get("data", {})
+            
+            price_data = accommodation.get("price", {})
+            price = float(price_data.get("total", 0)) if price_data else 0
+            
+            hotel = HotelInfo(
+                id=accommodation.get("id", hotel_id),
+                name=accommodation.get("name", "Unknown Hotel"),
+                city=accommodation.get("city", ""),
+                country=accommodation.get("country", ""),
+                description=accommodation.get("description", ""),
+                price=price,
+                currency=accommodation.get("currency", {}).get("accommodation", "USD"),
+                rating=float(accommodation.get("review_score", 0)),
+                review_count=accommodation.get("review_count", 0),
+                image_urls=accommodation.get("image_urls", []),
+                amenities=accommodation.get("facilities", [])
+            )
+            
+            cache_doc = {
+                "hotel_id": hotel_id,
+                "hotel_data": hotel.dict(),
+                "cached_at": datetime.now(timezone.utc),
+                "expires_at": datetime.now(timezone.utc) + timedelta(hours=6)
+            }
+            await db.hotel_details_cache.insert_one(cache_doc)
+            
+            return hotel
+            
+        except HTTPException as e:
+            if e.status_code == 404:
+                logger.info(f"Hotel {hotel_id} not found on Booking.com, using mock data")
+            else:
+                raise
+    
     hotel = next((h for h in MOCK_HOTELS if h["id"] == hotel_id), None)
     if not hotel:
         raise HTTPException(status_code=404, detail="Hotel not found")
