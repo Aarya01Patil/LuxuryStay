@@ -90,7 +90,7 @@ function PaymentSuccessPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount Paid</span>
-                  <span className="font-bold">${(paymentStatus.amount_total / 100).toFixed(2)}</span>
+                  <span className="font-bold">₹{(paymentStatus.amount_total / 100).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status</span>
