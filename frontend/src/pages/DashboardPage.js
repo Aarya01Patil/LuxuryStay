@@ -133,7 +133,7 @@ function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <DollarSign className="w-4 h-4" />
-                      <span className="text-sm font-semibold">${booking.total_price.toFixed(2)}</span>
+                      <span className="text-sm font-semibold">₹{booking.total_price.toFixed(2)}</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Booking ID: {booking.booking_id}
