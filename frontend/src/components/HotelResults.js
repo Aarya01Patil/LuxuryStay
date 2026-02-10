@@ -112,7 +112,7 @@ function HotelResults() {
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Price per night</p>
                   <p className="text-4xl font-black text-primary mb-1">
-                    ${hotel.price.toFixed(0)}
+                    ₹{hotel.price.toFixed(0)}
                   </p>
                   <p className="text-xs text-muted-foreground">+ taxes & fees</p>
                 </div>
