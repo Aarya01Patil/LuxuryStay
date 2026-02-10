@@ -433,6 +433,8 @@ async def search_hotels(search_request: HotelSearchRequest):
     if not filtered_hotels:
         filtered_hotels = MOCK_HOTELS
     
+    random.shuffle(filtered_hotels)
+    
     return [HotelInfo(**hotel) for hotel in filtered_hotels]
 
 @api_router.get("/hotels/{hotel_id}", response_model=HotelInfo)
