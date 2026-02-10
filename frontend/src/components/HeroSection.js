@@ -42,15 +42,24 @@ function HeroSection() {
 
   return (
     <div className="relative min-h-[85vh] flex items-center justify-center overflow-hidden" data-testid="hero-section">
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1724598571320-7d2b5584cff6?w=1920)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-background"></div>
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-secondary/20 to-accent/30 animate-gradient"></div>
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            radial-gradient(circle at 20% 50%, rgba(199, 210, 254, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(254, 215, 170, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(147, 197, 253, 0.2) 0%, transparent 50%)
+          `,
+          animation: 'float 20s ease-in-out infinite'
+        }}></div>
+        <img
+          src="https://images.unsplash.com/photo-1724598571320-7d2b5584cff6?w=1920"
+          alt="Background"
+          className="w-full h-full object-cover opacity-20"
+          style={{
+            animation: 'slowZoom 30s ease-in-out infinite alternate'
+          }}
+        />
       </div>
 
       <div className="container relative z-10 px-6 md:px-12 lg:px-24">
