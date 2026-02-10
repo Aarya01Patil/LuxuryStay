@@ -197,7 +197,7 @@ function HotelDetailsPage() {
             <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle className="text-3xl font-black">
-                  ${hotel.price}
+                  ₹{hotel.price}
                   <span className="text-base font-normal text-muted-foreground"> / night</span>
                 </CardTitle>
               </CardHeader>
