@@ -259,12 +259,12 @@ function HotelDetailsPage() {
 
                   <div className="pt-4 border-t border-border">
                     <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">${hotel.price} x {nights} nights</span>
-                      <span className="font-semibold">${(hotel.price * nights).toFixed(2)}</span>
+                      <span className="text-muted-foreground">₹{hotel.price} x {nights} nights</span>
+                      <span className="font-semibold">₹{(hotel.price * nights).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">${totalPrice.toFixed(2)}</span>
+                      <span className="text-primary">₹{totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
 
