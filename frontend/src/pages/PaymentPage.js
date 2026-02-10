@@ -59,7 +59,7 @@ function PaymentPage() {
               </div>
               <div className="pt-4 border-t border-border flex justify-between text-lg">
                 <span className="font-bold">Total Amount</span>
-                <span className="font-black text-primary">${booking.total_price.toFixed(2)}</span>
+                <span className="font-black text-primary">₹{booking.total_price.toFixed(2)}</span>
               </div>
             </div>
           </div>
