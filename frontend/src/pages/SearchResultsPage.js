@@ -12,7 +12,7 @@ function SearchResultsPage() {
       <nav className="bg-white border-b border-border">
         <div className="container mx-auto px-6 md:px-12 lg:px-24 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-black">Vibrant Escape</h1>
+            <h1 className="text-2xl font-bold">Luxury Stay</h1>
             <Button
               variant="ghost"
               onClick={() => navigate('/')}

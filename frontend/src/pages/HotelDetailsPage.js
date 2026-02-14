@@ -4,38 +4,21 @@ import { ArrowLeft, Star, MapPin, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { useHotelStore, useAuthStore } from '../store/hotelStore';
-import { hotelService, bookingService, authService } from '../services/api';
+import { useHotelStore } from '../store/hotelStore';
+import { hotelService, bookingService } from '../services/api';
 import { toast } from 'sonner';
 
 function HotelDetailsPage() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const { selectedHotel, setSelectedHotel, searchParams } = useHotelStore();
-  const { isAuthenticated, setUser } = useAuthStore();
   const [hotel, setHotel] = useState(selectedHotel);
   const [loading, setLoading] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [bookingData, setBookingData] = useState({
     guestFirstName: '',
     guestLastName: '',
     guestEmail: ''
   });
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const userData = await authService.getMe();
-        setUser(userData);
-      } catch (error) {
-        // Not authenticated
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
-  }, [setUser]);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -68,11 +51,6 @@ function HotelDetailsPage() {
   const handleBooking = async (e) => {
     e.preventDefault();
 
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
     if (!bookingData.guestFirstName || !bookingData.guestLastName || !bookingData.guestEmail) {
       toast.error("Please fill in all guest details");
       return;
@@ -97,8 +75,8 @@ function HotelDetailsPage() {
         total_price: calculateTotal()
       });
 
-      toast.success("Booking created! Proceeding to payment...");
-      navigate('/payment', { state: { booking } });
+      toast.success("Booking confirmed!");
+      navigate('/payment-success', { state: { booking } });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Unable to create booking");
     } finally {
@@ -122,7 +100,7 @@ function HotelDetailsPage() {
       <nav className="bg-white border-b border-border">
         <div className="container mx-auto px-6 md:px-12 lg:px-24 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-black">Vibrant Escape</h1>
+            <h1 className="text-2xl font-bold">Luxury Stay</h1>
             <Button
               variant="ghost"
               onClick={() => navigate('/search-results')}
@@ -162,11 +140,10 @@ function HotelDetailsPage() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(hotel.rating / 2)
-                            ? 'fill-secondary text-secondary'
-                            : 'text-gray-300'
-                        }`}
+                        className={`w-5 h-5 ${i < Math.floor(hotel.rating / 2)
+                          ? 'fill-secondary text-secondary'
+                          : 'text-gray-300'
+                          }`}
                       />
                     ))}
                   </div>
@@ -275,7 +252,7 @@ function HotelDetailsPage() {
                     disabled={loading}
                     data-testid="reserve-button"
                   >
-                    {loading ? 'Processing...' : 'Reserve & Pay'}
+                    {loading ? 'Processing...' : 'Book Now'}
                   </Button>
                 </form>
               </CardContent>

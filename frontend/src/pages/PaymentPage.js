@@ -14,7 +14,7 @@ function PaymentPage() {
 
   useEffect(() => {
     if (!booking) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [booking, navigate]);
 
@@ -77,7 +77,7 @@ function PaymentPage() {
 
           <Button
             variant="outline"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/')}
             className="w-full rounded-full"
             data-testid="cancel-payment-button"
           >

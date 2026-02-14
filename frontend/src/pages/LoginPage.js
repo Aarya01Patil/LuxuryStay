@@ -11,7 +11,7 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" data-testid="login-page">
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: 'url(https://images.unsplash.com/photo-1758613171601-64ebfbc928ed?w=1920)',
@@ -25,7 +25,7 @@ function LoginPage() {
       <div className="relative z-10 max-w-md w-full mx-4">
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-12 border border-white/20">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-black mb-2">Vibrant Escape</h1>
+            <h1 className="text-4xl font-black mb-2">Luxury Stay</h1>
             <p className="text-muted-foreground">Book your dream hotel today</p>
           </div>
 

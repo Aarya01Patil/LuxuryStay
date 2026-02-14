@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import httpx
 import random
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+from contextlib import asynccontextmanager
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -21,8 +21,21 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-app = FastAPI()
-api_router = APIRouter(prefix="/api")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Check MongoDB connection
+    try:
+        await client.admin.command('ping')
+        print("✅ Successfully connected to MongoDB!")
+    except Exception as e:
+        print(f"❌ Failed to connect to MongoDB: {e}")
+    yield
+    # Shutdown: Close connection
+    client.close()
+    print("MongoDB connection closed.")
+
+app = FastAPI(lifespan=lifespan)
+api_router = APIRouter()
 
 BOOKING_API_KEY = os.environ.get('BOOKING_API_KEY', 'YOUR_API_KEY_HERE')
 BOOKING_AFFILIATE_ID = os.environ.get('BOOKING_AFFILIATE_ID', 'YOUR_AFFILIATE_ID_HERE')
@@ -206,7 +219,8 @@ async def get_current_user(authorization: Optional[str] = Header(None), request:
         session_token = authorization.replace("Bearer ", "")
     
     if not session_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return None
+        # raise HTTPException(status_code=401, detail="Not authenticated")
     
     session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
     if not session_doc:
@@ -328,6 +342,21 @@ async def logout(request: Request, user: Dict = Depends(get_current_user)):
     if session_token:
         await db.user_sessions.delete_one({"session_token": session_token})
     return {"message": "Logged out successfully"}
+
+@api_router.get("/")
+async def api_root():
+    """API root endpoint"""
+    return {
+        "message": "Luxury Stay API",
+        "version": "1.0.0",
+        "endpoints": {
+            "status": "/api/status",
+            "search_hotels": "/api/hotels/search",
+            "hotel_details": "/api/hotels/{hotel_id}",
+            "create_booking": "/api/bookings/create",
+            "get_bookings": "/api/bookings"
+        }
+    }
 
 @api_router.get("/status")
 async def api_status():
@@ -495,7 +524,29 @@ async def get_hotel_details(hotel_id: int):
     return HotelInfo(**hotel)
 
 @api_router.post("/bookings/create", response_model=BookingResponse)
-async def create_booking(booking_request: BookingRequest, user: Dict = Depends(get_current_user)):
+async def create_booking(booking_request: BookingRequest, user: Optional[Dict] = Depends(get_current_user)):
+    # If no authenticated user, try to find or create a guest user based on email
+    user_id = None
+    if user:
+        user_id = user["user_id"]
+    else:
+        # Check if guest email exists in users
+        guest_user = await db.users.find_one({"email": booking_request.guest_email}, {"_id": 0})
+        if guest_user:
+            user_id = guest_user["user_id"]
+        else:
+            # Create a new guest user
+            user_id = f"guest_{uuid.uuid4().hex[:12]}"
+            guest_doc = {
+                "user_id": user_id,
+                "email": booking_request.guest_email,
+                "name": f"{booking_request.guest_first_name} {booking_request.guest_last_name}",
+                "picture": "",  # No picture for guests
+                "created_at": datetime.now(timezone.utc),
+                "is_guest": True
+            }
+            await db.users.insert_one(guest_doc)
+
     hotel = next((h for h in MOCK_HOTELS if h["id"] == booking_request.hotel_id), None)
     if not hotel:
         raise HTTPException(status_code=404, detail="Hotel not found")
@@ -504,7 +555,7 @@ async def create_booking(booking_request: BookingRequest, user: Dict = Depends(g
     
     booking_doc = {
         "booking_id": booking_id,
-        "user_id": user["user_id"],
+        "user_id": user_id,
         "hotel_id": booking_request.hotel_id,
         "hotel_name": hotel["name"],
         "check_in": booking_request.check_in,
@@ -515,7 +566,7 @@ async def create_booking(booking_request: BookingRequest, user: Dict = Depends(g
         "num_adults": booking_request.num_adults,
         "num_children": booking_request.num_children,
         "total_price": booking_request.total_price,
-        "status": "pending_payment",
+        "status": "confirmed",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -525,7 +576,7 @@ async def create_booking(booking_request: BookingRequest, user: Dict = Depends(g
         booking_id=booking_id,
         hotel_id=booking_request.hotel_id,
         hotel_name=hotel["name"],
-        status="pending_payment",
+        status="confirmed",
         check_in=booking_request.check_in,
         check_out=booking_request.check_out,
         total_price=booking_request.total_price,
@@ -537,41 +588,48 @@ async def get_user_bookings(user: Dict = Depends(get_current_user)):
     bookings = await db.bookings.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(100)
     return [BookingResponse(**booking) for booking in bookings]
 
+
+# Validates Stripe Checkout Session Request
+class CheckoutSessionRequest(BaseModel):
+    amount: float
+    currency: str
+    success_url: str
+    cancel_url: str
+    metadata: Optional[Dict[str, str]] = None
+
+# Response model for Checkout Session
+class CheckoutSessionResponse(BaseModel):
+    session_id: str
+    url: str
+
+# Response model for Checkout Status
+class CheckoutStatusResponse(BaseModel):
+    session_id: str
+    payment_status: str
+    status: str
+
 @api_router.post("/payments/checkout/session", response_model=CheckoutSessionResponse)
 async def create_checkout_session(payment_req: PaymentCheckoutRequest, user: Dict = Depends(get_current_user), request: Request = None):
+    # Mock implementation
     booking_doc = await db.bookings.find_one({"booking_id": payment_req.booking_id}, {"_id": 0})
     if not booking_doc:
         raise HTTPException(status_code=404, detail="Booking not found")
     
-    if booking_doc["user_id"] != user["user_id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    # Simulate a session ID
+    session_id = f"mock_session_{uuid.uuid4().hex}"
     
-    stripe_api_key = os.environ.get('STRIPE_API_KEY')
+    # In a real app, this would be a Stripe URL. Here we just redirect to the success page immediately check logic on frontend
+    # But usually the frontend redirects to this URL. 
+    # Since we don't have a real payment provider, we can't redirect to a payment page.
+    # We will simulate a "success" by returning a URL that goes straight to the success handler on the frontend.
+    # The frontend expects a session_id param.
+    
     host_url = payment_req.origin_url
-    webhook_url = f"{str(request.base_url).rstrip('/')}/api/webhook/stripe"
-    
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    success_url = f"{host_url}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{host_url}/bookings"
-    
-    checkout_request = CheckoutSessionRequest(
-        amount=float(booking_doc["total_price"]),
-        currency="usd",
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata={
-            "booking_id": booking_doc["booking_id"],
-            "user_id": user["user_id"],
-            "hotel_name": booking_doc["hotel_name"]
-        }
-    )
-    
-    session = await stripe_checkout.create_checkout_session(checkout_request)
+    success_url = f"{host_url}/payment-success?session_id={session_id}"
     
     payment_doc = {
         "payment_id": f"payment_{uuid.uuid4().hex[:12]}",
-        "session_id": session.session_id,
+        "session_id": session_id,
         "booking_id": booking_doc["booking_id"],
         "user_id": user["user_id"],
         "amount": booking_doc["total_price"],
@@ -582,71 +640,55 @@ async def create_checkout_session(payment_req: PaymentCheckoutRequest, user: Dic
     }
     await db.payment_transactions.insert_one(payment_doc)
     
-    return session
+    return CheckoutSessionResponse(session_id=session_id, url=success_url)
 
 @api_router.get("/payments/checkout/status/{session_id}", response_model=CheckoutStatusResponse)
 async def get_checkout_status(session_id: str, user: Dict = Depends(get_current_user)):
-    stripe_api_key = os.environ.get('STRIPE_API_KEY')
-    webhook_url = "https://example.com/webhook"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    checkout_status = await stripe_checkout.get_checkout_status(session_id)
-    
+    # Mock implementation - always return paid
     payment_doc = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-    if payment_doc:
-        if checkout_status.payment_status == "paid" and payment_doc["payment_status"] != "paid":
-            await db.payment_transactions.update_one(
-                {"session_id": session_id},
-                {"$set": {"payment_status": "paid", "status": "completed"}}
-            )
-            
-            await db.bookings.update_one(
-                {"booking_id": payment_doc["booking_id"]},
-                {"$set": {"status": "confirmed"}}
-            )
     
-    return checkout_status
+    if payment_doc:
+        # Auto-complete the payment
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {"payment_status": "paid", "status": "completed"}}
+        )
+        await db.bookings.update_one(
+            {"booking_id": payment_doc["booking_id"]},
+            {"$set": {"status": "confirmed"}}
+        )
+        return CheckoutStatusResponse(session_id=session_id, payment_status="paid", status="complete")
+        
+    return CheckoutStatusResponse(session_id=session_id, payment_status="unknown", status="unknown")
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
-    body = await request.body()
-    signature = request.headers.get("Stripe-Signature")
-    
-    stripe_api_key = os.environ.get('STRIPE_API_KEY')
-    webhook_url = str(request.base_url).rstrip('/') + "/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-    
-    try:
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
-        
-        if webhook_response.event_type == "checkout.session.completed":
-            session_id = webhook_response.session_id
-            payment_doc = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-            
-            if payment_doc and payment_doc["payment_status"] != "paid":
-                await db.payment_transactions.update_one(
-                    {"session_id": session_id},
-                    {"$set": {"payment_status": "paid", "status": "completed"}}
-                )
-                
-                await db.bookings.update_one(
-                    {"booking_id": payment_doc["booking_id"]},
-                    {"$set": {"status": "confirmed"}}
-                )
-        
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    # Mock webhook - do nothing or just return success
+    return {"status": "success"}
 
-app.include_router(api_router)
+
+app.include_router(api_router, prefix="/api")
+
+
+# CORS configuration
+cors_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+# Add any additional origins from environment variable
+if os.environ.get('CORS_ORIGINS'):
+    cors_origins.extend([origin.strip() for origin in os.environ.get('CORS_ORIGINS').split(',') if origin.strip()])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
+    allow_credentials=False,  # Not needed since we removed login
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -654,6 +696,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+if __name__ == "__main__":
+    import uvicorn
+    # Verify mongo connection first? No, lifespan handles it.
+    print("Starting backend server...")
+    uvicorn.run("server:app", host="0.0.0.0", port=5000, reload=True)
